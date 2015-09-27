@@ -415,7 +415,7 @@ $app->get('/friends', function () use ($app) {
         $key = ($rel['one'] == current_user()['id'] ? 'another' : 'one');
         if (!isset($friends[$rel[$key]])) $friends[$rel[$key]] = $rel['created_at'];
     }
-    app->render('friends.php', array('friends' => $friends));
+    $app->render('friends.php', array('friends' => $friends));
 });
 
 $app->post('/friends/:account_name', function ($account_name) use ($app) {
