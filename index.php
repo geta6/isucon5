@@ -221,13 +221,11 @@ SQL;
     $friends = db_execute($friends_query, array(current_user()['id']))->fetchAll(PDO::FETCH_COLUMN, 0);
 
     $entries_of_friends = array();
-    $stmt = db_execute('SELECT * FROM entries ORDER BY created_at DESC LIMIT 1000');
+    $stmt = db_execute('SELECT * FROM entries WHERE user_id NOT IN (' . implode(',', $friends) . ')ORDER BY created_at DESC LIMIT 10');
     while ($entry = $stmt->fetch()) {
-        if (in_array($entry['user_id'], $friends)) continue;
         list($title) = preg_split('/\n/', $entry['body']);
         $entry['title'] = $title;
         $entries_of_friends[] = $entry;
-        if (sizeof($entries_of_friends) >= 10) break;
     }
 
     $comments_of_friends = array();
