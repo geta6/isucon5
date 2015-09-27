@@ -34,7 +34,7 @@ $app = new \Slim\Slim(array(
         'password' => getenv('ISUCON5_DB_PASSWORD'),
         'database' => getenv('ISUCON5_DB_NAME') ?: 'isucon5q'
     ),
-    'cookies.encrypt' => true,
+    'cookies.encrypt' => false,
 ));
 
 $app->add(new \Slim\Middleware\SessionCookie(array(
