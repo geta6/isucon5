@@ -410,11 +410,14 @@ $app->get('/friends', function () use ($app) {
     authenticated();
     $query = 'SELECT another, created_at FROM relations WHERE one = ? ORDER BY created_at DESC';
     $friends = [];
+    $friend_ids = [];
     $stmt = db_execute($query, array(current_user()['id']));
     while ($friend = $stmt->fetch()) {
         $friends[$friend['another']] = $friend['created_at'];
+        $friend_ids[] = $friend['another'];
     }
-    $app->render('friends.php', array('friends' => $friends));
+    $nick_names = db_execute('SELECT nick_name FROM users WHERE id = IN(?)', implode(",", $friend_ids))->fetchAll(PDO::FETCH_COLUMN, 0);
+    $app->render('friends.php', array('friends' => $friends, 'nick_names' => $nick_names));
 });
 
 $app->post('/friends/:account_name', function ($account_name) use ($app) {
