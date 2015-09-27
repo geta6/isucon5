@@ -408,12 +408,11 @@ SQL;
 
 $app->get('/friends', function () use ($app) {
     authenticated();
-    $query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC';
-    $friends = array();
-    $stmt = db_execute($query, array(current_user()['id'], current_user()['id']));
-    while ($rel = $stmt->fetch()) {
-        $key = ($rel['one'] == current_user()['id'] ? 'another' : 'one');
-        if (!isset($friends[$rel[$key]])) $friends[$rel[$key]] = $rel['created_at'];
+    $query = 'SELECT user_id, created_at FROM relations WHERE one = ? ORDER BY created_at DESC';
+    $stmt = db_execute($query, array(current_user()['id']))->fetchAll();
+    $friends = [];
+    while ($friends = $stmt->fetch()) {
+        $friends[$friend['user_id']] = $friends['created_at'];
     }
     $app->render('friends.php', array('friends' => $friends));
 });
