@@ -147,8 +147,9 @@ function user_from_account($account_name)
 function is_friend($another_id)
 {
     $user_id = $_SESSION['user_id'];
-    $query = 'SELECT COUNT(1) AS cnt FROM relations WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)';
-    $cnt = db_execute($query, array($user_id, $another_id, $another_id, $user_id))->fetch()['cnt'];
+    // WHERE (one = ? AND another = ?) OR (one = ? AND another = ?)
+    $query = 'SELECT id, one, another FROM relations WHERE one = ? AND another = ?';
+    $cnt = db_execute($query, array($user_id, $another_id))->fetch()['cnt'];
     return $cnt > 0 ? true : false;
 }
 
@@ -224,7 +225,7 @@ SQL;
     $comments_for_me = db_execute($comments_for_me_query, array(current_user()['id']))->fetchAll();
 
     $entries_of_friends = array();
-    $stmt = db_execute('SELECT * FROM entries ORDER BY created_at DESC LIMIT 1000');
+    $stmt = db_execute('SELECT * FROM entries INNER JOIN  ORDER BY created_at DESC LIMIT 1000');
     while ($entry = $stmt->fetch()) {
         if (!is_friend($entry['user_id'])) continue;
         list($title) = preg_split('/\n/', $entry['body']);
@@ -244,7 +245,7 @@ SQL;
         if (sizeof($comments_of_friends) >= 10) break;
     }
 
-    $friends_query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC';
+    $friends_query = 'SELECT * FROM relations WHERE one = ? ORDER BY created_at DESC';
     $friends = array();
     $stmt = db_execute($friends_query, array(current_user()['id'], current_user()['id']));
     while ($rel = $stmt->fetch()) {
@@ -419,7 +420,7 @@ SQL;
 
 $app->get('/friends', function () use ($app) {
     authenticated();
-    $query = 'SELECT * FROM relations WHERE one = ? OR another = ? ORDER BY created_at DESC';
+    $query = 'SELECT * FROM relations WHERE one = ? ORDER BY created_at DESC';
     $friends = array();
     $stmt = db_execute($query, array(current_user()['id'], current_user()['id']));
     while ($rel = $stmt->fetch()) {
@@ -434,7 +435,7 @@ $app->post('/friends/:account_name', function ($account_name) use ($app) {
     if (!is_friend_account($account_name)) {
         $user = user_from_account($account_name);
         if (!$user) abort_content_not_found();
-        db_execute('INSERT INTO relations (one, another) VALUES (?,?), (?,?)', array(current_user()['id'], $user['id'], $user['id'], current_user()['id']));
+        db_execute('INSERT INTO relations (one, another) VALUES (?,?)', array(current_user()['id'], $user['id']));
         $app->redirect('/friends');
     }
 });
