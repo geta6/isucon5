@@ -137,7 +137,7 @@ function authenticated()
 
 function get_user($user_id)
 {
-    $user = db_execute('SELECT * FROM users WHERE id = ?', array($user_id))->fetch();
+    $user = $redis->hgetall("user:${user_id}");
     if (!$user) abort_content_not_found();
     return $user;
 }
@@ -456,11 +456,6 @@ $app->get('/initialize', function () use ($app) {
     db_execute("DELETE FROM footprints WHERE id > 500000");
     db_execute("DELETE FROM entries WHERE id > 500000");
     db_execute("DELETE FROM comments WHERE id > 1500000");
-
-    $stmt = db_execute('SELECT * FROM users');
-    while ($user = $stmt->fetch()) {
-        $_SESSION['users'][$user['id']] = $user;
-    }
 });
 
 $app->run();
