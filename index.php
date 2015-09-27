@@ -133,6 +133,7 @@ function authenticated()
 
 function get_user($user_id)
 {
+    global $redis;
     $user = $redis->hgetall("user:${user_id}");
     if (!$user) abort_content_not_found();
     return $user;
