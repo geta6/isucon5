@@ -437,6 +437,9 @@ $app->post('/friends/:account_name', function ($account_name) use ($app) {
 });
 
 $app->get('/initialize', function () use ($app) {
+    exec('redis-cli shutdown');
+    exec('cp -f tmp/origin/dump.rdb tmp/redis/dump.rdb');
+    exec('redis-server redis.conf');
     db_execute("DELETE FROM relations WHERE id > 500000");
     db_execute("DELETE FROM footprints WHERE id > 500000");
     db_execute("DELETE FROM entries WHERE id > 500000");
