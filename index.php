@@ -101,14 +101,10 @@ function db_execute($query, $args = array())
 
 function authenticate($email, $password)
 {
-    global $redis;
     if (strstr($email, '@', true) != $password) {
         abort_authentication_error();
     }
     $user = db_execute('SELECT * FROM users WHERE email=?', array($email))->fetch();
-    foreach($user as $key => $val) {
-        $redis->hmset("user:${user['id']}", $key, $val);
-    }
     $_SESSION['user_id'] = $user['id'];
     return $user;
 }
