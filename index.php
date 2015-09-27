@@ -422,21 +422,9 @@ $app->get('/friends', function () use ($app) {
     authenticated();
     $query = 'SELECT another, created_at FROM relations WHERE one = ? ORDER BY created_at DESC';
     $friends = [];
-    $friend_ids = [];
-    $place_holder = '';
     $stmt = db_execute($query, array(current_user()['id']));
     while ($friend = $stmt->fetch()) {
-        $friends[$friend['another']]['created_at'] = $friend['created_at'];
-        $friend_ids[] = $friend['another'];
-	$place_holder .= '?,';
-    }
-    $place_holder = substr($place_holder, 0, -1);
-    $users = db_execute("SELECT account_name, nick_name FROM users WHERE id IN(${place_holder})", $friend_ids)->fetchAll();
-    $i = 0;
-    foreach ($friends as $user_id => $created_at) {
-        $friends[$user_id]['nick_name'] = $users[$i]['nick_name'];
-	$friends[$user_id]['account_name'] = $users[$i]['account_name'];
-	$i++;
+        $friends[$friend['another']] = $friend['created_at'];
     }
     $app->render('friends.php', array('friends' => $friends));
 });
