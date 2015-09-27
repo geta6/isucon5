@@ -25,10 +25,16 @@ class Isucon5View extends \Slim\View
     }
 }
 
+$redis = new Predis\Client([
+    'schema' => 'tcp',
+    'host'   => 'localhost',
+    'port'   => 6379,
+]);
+
 $app = new \Slim\Slim(array(
     'view' => new Isucon5View(),
     'db' => array(
-        'host' => getenv('ISUCON5_DB_HOST') ?: 'localhost',
+        'host' => getenv('ISUCON5_DB_HOST') ?: '127.0.0.1',
         'port' => (int)getenv('ISUCON5_DB_PORT') ?: 3306,
         'username' => getenv('ISUCON5_DB_USER') ?: 'root',
         'password' => getenv('ISUCON5_DB_PASSWORD'),
@@ -95,20 +101,25 @@ function db_execute($query, $args = array())
 
 function authenticate($email, $password)
 {
+    global $redis;
     if (strstr($email, '@', true) != $password) {
         abort_authentication_error();
     }
     $user = db_execute('SELECT * FROM users WHERE email=?', array($email))->fetch();
+    foreach($user as $key => $val) {
+        $redis->hmset("user:${user['id']}", $key, $val);
+    }
     $_SESSION['user_id'] = $user['id'];
     return $user;
 }
 
 function current_user()
 {
+    global $redis;
     static $user;
     if ($user) return $user;
     if (!isset($_SESSION['user_id'])) return null;
-    $user = db_execute('SELECT id, account_name, nick_name, email FROM users WHERE id=?', array($_SESSION['user_id']))->fetch();
+    $user = $redis->hgetall("user:${_SESSION['user_id']}");
     if (!$user) {
         $_SESSION['user_id'] = null;
         abort_authentication_error();
@@ -158,6 +169,7 @@ function permitted($another_id)
 
 function mark_footprint($user_id)
 {
+
     if ($user_id != current_user()['id']) {
         $query = 'INSERT INTO footprints (user_id,owner_id) VALUES (?,?)';
         db_execute($query, array($user_id, current_user()['id']));
